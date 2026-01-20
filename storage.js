@@ -1,47 +1,41 @@
 const Storage = {
-    KEY: 'terminal-notes-data',
-
-    getAll() {
-        const data = localStorage.getItem(this.KEY);
-        return data ? JSON.parse(data) : [];
+    // Adapter layer to switch from localStorage to IndexedDB
+    
+    async getAll() {
+        return await DB.getAll();
     },
 
-    save(notes) {
-        localStorage.setItem(this.KEY, JSON.stringify(notes));
+    async add(content) {
+        return await DB.add(content);
     },
 
-    add(content) {
-        const notes = this.getAll();
-        const id = notes.length > 0 ? Math.max(...notes.map(n => n.id)) + 1 : 1;
-        const note = {
-            id,
-            content,
-            timestamp: new Date().toISOString()
-        };
-        notes.push(note);
-        this.save(notes);
-        return note;
-    },
-
-    delete(id) {
-        const notes = this.getAll();
-        const initialLength = notes.length;
-        const filteredNotes = notes.filter(n => n.id !== parseInt(id));
+    async delete(id) {
+        // First check if exists
+        const note = await DB.get(id);
+        if (!note) return false;
         
-        if (filteredNotes.length === initialLength) {
-            return false;
-        }
-
-        this.save(filteredNotes);
+        await DB.delete(id);
         return true;
     },
 
-    get(id) {
-        const notes = this.getAll();
-        return notes.find(n => n.id === parseInt(id));
+    async get(id) {
+        return await DB.get(id);
     },
 
-    clear() {
-        localStorage.removeItem(this.KEY);
+    async clear() {
+        return await DB.clear();
+    },
+
+    // New methods supported by DB but exposed via Storage
+    async search(query) {
+        return await DB.search(query);
+    },
+
+    async export() {
+        return await DB.export();
+    },
+
+    async import(jsonString) {
+        return await DB.import(jsonString);
     }
 };

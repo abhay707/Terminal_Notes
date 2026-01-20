@@ -7,13 +7,43 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="terminal">
-        <div id="output"></div>
-        <div class="input-line">
-            <span class="prompt">$</span>
-            <input type="text" id="command-input" autofocus autocomplete="off" spellcheck="false">
+    <div id="app">
+        <div id="terminal-container">
+            <div id="output" class="terminal-output"></div>
+        </div>
+
+        <div id="command-palette" class="panel">
+            <input type="text" id="command-input" class="palette-input" placeholder="Search or command..." autofocus autocomplete="off" spellcheck="false">
+            <div id="suggestions" class="suggestions">
+                <div class="chip" data-cmd="/n"><span class="chip-key">/n</span><span class="chip-label">create new note</span></div>
+                <div class="chip" data-cmd="/a"><span class="chip-key">/a</span><span class="chip-label">view all notes</span></div>
+                <div class="chip" data-cmd="/search"><span class="chip-key">/search</span><span class="chip-label">search notes</span></div>
+                <div class="chip" data-cmd="/help"><span class="chip-key">/help</span><span class="chip-label">list all commands</span></div>
+            </div>
+        </div>
+
+        <div id="editor-overlay" class="overlay hidden">
+            <div class="panel editor-panel">
+                <textarea id="editor-textarea" placeholder="Write here..."></textarea>
+                <div class="hints">
+                    <span class="hint">markdown supported</span>
+                    <button id="editor-save" class="btn-action">Save (Ctrl+Enter)</button>
+                    <button id="editor-cancel" class="btn-secondary">Cancel (Esc)</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="viewer-overlay" class="overlay hidden">
+            <div class="panel viewer-panel">
+                <div id="viewer-content" class="viewer-content"></div>
+                <div class="hints">
+                    <button id="viewer-delete" class="btn-action">Delete (ctrl+d)</button>
+                    <button id="viewer-close" class="btn-secondary">Close (Esc)</button>
+                </div>
+            </div>
         </div>
     </div>
+    <script src="db.js"></script>
     <script src="storage.js"></script>
     <script src="commands.js"></script>
     <script src="main.js"></script>
