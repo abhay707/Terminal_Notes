@@ -1,0 +1,109 @@
+body {
+    background-color: #0d1117;
+    color: #3fb950;
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0;
+    padding: 20px;
+    height: 100vh;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-shadow: 0 0 2px rgba(63, 185, 80, 0.4);
+}
+
+#terminal {
+    max-width: 800px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    background-color: #0d1117;
+}
+
+#output {
+    flex-grow: 1;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    margin-bottom: 10px;
+}
+
+.input-line {
+    display: flex;
+    align-items: center;
+}
+
+.prompt {
+    margin-right: 10px;
+    font-weight: bold;
+    color: #58a6ff;
+    text-shadow: 0 0 3px rgba(88, 166, 255, 0.4);
+}
+
+input {
+    background: transparent;
+    border: none;
+    color: #c9d1d9;
+    font-family: inherit;
+    font-size: inherit;
+    flex-grow: 1;
+    outline: none;
+    caret-color: #3fb950;
+    text-shadow: 0 0 2px rgba(201, 209, 217, 0.3);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0d1117;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #484f58;
+}
+
+.command-line {
+    margin-bottom: 5px;
+}
+
+.command-text {
+    color: #c9d1d9;
+}
+
+.response {
+    margin-bottom: 15px;
+    color: #8b949e;
+}
+
+.note-item {
+    margin-bottom: 5px;
+}
+
+.note-id {
+    color: #d2a8ff;
+    margin-right: 10px;
+}
+
+.note-content {
+    color: #c9d1d9;
+}
+
+.error {
+    color: #ff7b72;
+    text-shadow: 0 0 3px rgba(255, 123, 114, 0.3);
+}
+
+.success {
+    color: #3fb950;
+    text-shadow: 0 0 3px rgba(63, 185, 80, 0.3);
+}
