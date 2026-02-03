@@ -116,9 +116,10 @@ const DB = {
         }
     },
 
-    async add(content) {
+    async add(content, title = '') {
         await this.init();
         const encryptedContent = await this.encrypt(content);
+        const encryptedTitle = title ? await this.encrypt(title) : '';
         
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([this.STORE_NAME], 'readwrite');
@@ -126,7 +127,9 @@ const DB = {
             
             const note = {
                 content: encryptedContent,
-                timestamp: new Date().toISOString()
+                title: encryptedTitle,
+                timestamp: new Date().toISOString(),
+                deleted: 0 // 0 = active, 1 = deleted
             };
 
             const request = store.add(note);
@@ -135,7 +138,8 @@ const DB = {
                 // Return the note with the new ID and decrypted content
                 resolve({ 
                     id: request.result, 
-                    content: content, 
+                    content: content,
+                    title: title,
                     timestamp: note.timestamp 
                 });
             };
@@ -146,7 +150,36 @@ const DB = {
         });
     },
 
-    async getAll() {
+    async update(id, content, title) {
+        await this.init();
+        const encryptedContent = await this.encrypt(content);
+        const encryptedTitle = title ? await this.encrypt(title) : '';
+        
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([this.STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(this.STORE_NAME);
+            const request = store.get(parseInt(id));
+
+            request.onsuccess = () => {
+                const note = request.result;
+                if (!note) {
+                    reject(new Error("Note not found"));
+                    return;
+                }
+                
+                note.content = encryptedContent;
+                if (title !== undefined) note.title = encryptedTitle;
+                note.timestamp = new Date().toISOString(); // Update timestamp on edit? Maybe separate updatedAt?
+
+                const updateRequest = store.put(note);
+                updateRequest.onsuccess = () => resolve(true);
+                updateRequest.onerror = (e) => reject(e.target.error);
+            };
+            request.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async getAll(includeDeleted = false) {
         await this.init();
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([this.STORE_NAME], 'readonly');
@@ -159,10 +192,17 @@ const DB = {
                 const decryptedNotes = await Promise.all(notes.map(async (note) => {
                     return {
                         ...note,
-                        content: await this.decrypt(note.content)
+                        content: await this.decrypt(note.content),
+                        title: note.title ? await this.decrypt(note.title) : ''
                     };
                 }));
-                resolve(decryptedNotes);
+                
+                // Filter deleted unless requested
+                const filtered = includeDeleted 
+                    ? decryptedNotes 
+                    : decryptedNotes.filter(n => !n.deleted);
+                    
+                resolve(filtered);
             };
 
             request.onerror = (event) => {
@@ -180,8 +220,9 @@ const DB = {
 
             request.onsuccess = async () => {
                 const note = request.result;
-                if (note) {
+                if (note && !note.deleted) {
                     note.content = await this.decrypt(note.content);
+                    note.title = note.title ? await this.decrypt(note.title) : '';
                     resolve(note);
                 } else {
                     resolve(null);
@@ -191,6 +232,75 @@ const DB = {
             request.onerror = (event) => {
                 reject(event.target.error);
             };
+        });
+    },
+
+    async softDelete(id) {
+        await this.init();
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([this.STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(this.STORE_NAME);
+            const request = store.get(parseInt(id));
+
+            request.onsuccess = () => {
+                const note = request.result;
+                if (note) {
+                    note.deleted = 1;
+                    note.deletedAt = new Date().toISOString();
+                    store.put(note).onsuccess = () => resolve(true);
+                } else {
+                    resolve(false);
+                }
+            };
+            request.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async restore(id) {
+        await this.init();
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([this.STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(this.STORE_NAME);
+            const request = store.get(parseInt(id));
+
+            request.onsuccess = () => {
+                const note = request.result;
+                if (note) {
+                    note.deleted = 0;
+                    delete note.deletedAt;
+                    store.put(note).onsuccess = () => resolve(true);
+                } else {
+                    resolve(false);
+                }
+            };
+            request.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async getDeleted() {
+        await this.init();
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([this.STORE_NAME], 'readonly');
+            const store = transaction.objectStore(this.STORE_NAME);
+            const request = store.getAll();
+
+            request.onsuccess = async () => {
+                const notes = request.result;
+                const deletedNotes = notes.filter(n => n.deleted === 1);
+                
+                // Sort by deletedAt desc
+                deletedNotes.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
+
+                const decrypted = await Promise.all(deletedNotes.map(async (note) => {
+                    return {
+                        ...note,
+                        content: await this.decrypt(note.content),
+                        title: note.title ? await this.decrypt(note.title) : ''
+                    };
+                }));
+                resolve(decrypted);
+            };
+            request.onerror = (e) => reject(e.target.error);
         });
     },
 

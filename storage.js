@@ -1,21 +1,37 @@
 const Storage = {
     // Adapter layer to switch from localStorage to IndexedDB
     
-    async getAll() {
-        return await DB.getAll();
+    async getAll(includeDeleted = false) {
+        return await DB.getAll(includeDeleted);
     },
 
-    async add(content) {
-        return await DB.add(content);
+    async add(content, title = '') {
+        return await DB.add(content, title);
+    },
+
+    async update(id, content, title) {
+        return await DB.update(id, content, title);
     },
 
     async delete(id) {
+        // Soft delete by default
         // First check if exists
         const note = await DB.get(id);
         if (!note) return false;
         
-        await DB.delete(id);
-        return true;
+        return await DB.softDelete(id);
+    },
+
+    async hardDelete(id) {
+        return await DB.delete(id);
+    },
+
+    async restore(id) {
+        return await DB.restore(id);
+    },
+
+    async getDeleted() {
+        return await DB.getDeleted();
     },
 
     async get(id) {
