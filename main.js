@@ -390,8 +390,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             addToOutput(`<div class="error">Note ${id} not found.</div>`);
                         }
                     } else if (baseCmd === 'theme') {
-                        // /theme -> list themes
-                        // /theme <name> -> switch
                         if (args.length === 0) {
                             const current = getCurrentTheme();
                             const items = AVAILABLE_THEMES.map(t => {
@@ -471,23 +469,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!text) return '';
         let html = escapeHtml(text);
         
-        // Bold
+
         html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        // Italic
+
         html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
         
-        // Images: ![alt](url) - Note: url might be base64, so it can be long.
-        // The escapeHtml escapes [ ] ( ) so we need to match escaped versions?
-        // Actually escapeHtml replaces < > & " '
-        // It does NOT replace [ ] ( )
-        
-        // Image regex
         html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; border-radius: 8px; margin: 10px 0;">');
         
-        // Link regex
         html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color: #58a6ff;">$1</a>');
 
-        // Newlines
         html = html.replace(/\n/g, '<br>');
 
         return html;

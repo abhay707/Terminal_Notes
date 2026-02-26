@@ -119,10 +119,6 @@ const Commands = {
             return `<div class="error">Note with ID ${id} not found.</div>`;
         }
         const titleHtml = note.title ? `<div class="note-item"><span class="note-id">Title:</span> ${this.escapeHtml(note.title)}</div>` : '';
-        // Parse markdown-like images for CLI view? For now just simple escape
-        // But if user added image via markdown ![alt](url), escapeHtml will break it.
-        // Let's allow basic markdown rendering in view? 
-        // For CLI view, we might just show raw text. The UI viewer handles markdown.
         
         return `
             <div class="response">
