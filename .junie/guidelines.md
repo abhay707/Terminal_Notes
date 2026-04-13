@@ -2,140 +2,138 @@
 
 ## 1. Project Overview
 
-**Terminal Notes** is a minimalist, developer-focused note-taking application designed to run entirely in the browser. It mimics a terminal interface, allowing users to manage notes via command-line instructions while offering a full Markdown editor for writing.
+**Terminal Notes** (Monolith_CMD) is a minimalist, developer-focused note-taking application designed to run entirely in the browser. It mimics a terminal interface, allowing users to manage notes via command-line instructions while offering a full Markdown editor and advanced AI-integrated features.
 
 -   **Target Audience:** Developers and CLI enthusiasts who prefer keyboard-driven workflows.
 -   **Core Philosophy:**
-    -   **Terminal-First:** Primary interaction is through the command line.
-    -   **Keyboard-Driven:** All actions (navigation, editing, deleting) have keyboard shortcuts.
-    -   **Local & Private:** Data is stored locally using IndexedDB; no server or internet connection is required.
+    -   **Terminal-First:** Primary interaction is through the command line or command-prefixed explorers.
+    -   **Keyboard-Driven:** Deeply integrated keyboard shortcuts for almost every action.
+    -   **Local & Private:** Data is stored locally using IndexedDB; AI processing is performed locally via Ollama.
+    -   **Intelligent:** Integrated AI utilities for summarizing, rewriting, and querying notes.
 
 ## 2. Tech Stack
 
 -   **Frontend:** Vanilla HTML5, CSS3, JavaScript (ES6+).
--   **Storage:** IndexedDB (via a custom wrapper `db.js`).
+-   **Routing:** Custom hash-based SPA router (`router.js`).
+-   **Storage:** IndexedDB (via a custom wrapper `db.js`) and `localStorage` for settings.
+-   **AI Integration:** Local Ollama API (Llama 3.2:3b) with streaming support.
 -   **Libraries:** None (Zero dependencies for the runtime application).
 -   **Testing:** Vitest (Dev dependency).
 
-## 3. Important Commands
+## 3. Command System
 
+The application uses a `/` prefix for commands. Commands can be chained using `&&` or `;`.
+
+### 3.1 Core Operations
 | Command | Alias | Description |
 | :--- | :--- | :--- |
 | `/n <title>` | `/add` | Create a new note and open the editor. |
-| `/a` | `/list` | List all notes in the viewer. |
-| `/view <id>` | `/v` | View a specific note in a separate window. |
-| `/edit <id>` | - | Edit an existing note by ID or Title. |
+| `/a` | `/list` | List all notes in the terminal. |
+| `/view <id>` | `/v` | View a specific note in the terminal. |
+| `/edit <query>` | - | Open a note in the editor by ID or Title search. |
 | `/delete <id>` | `/d` | Delete a note (moves to trash). |
 | `/undo` | - | Restore the last deleted note. |
-| `/search <query>` | - | Search note contents. |
-| `/history` | - | Display command history. |
+| `/search <query>` | - | Perform a content and title search. |
+| `/tag <name> [id]` | - | Toggle a specific tag for a note. |
 | `/clear` | - | Clear the terminal output. |
-| `/help` | - | Show available commands. |
+| `/export` | - | Export all notes to JSON. |
+| `/import <json>` | - | Import notes from JSON. |
 
-**Common Workflow:**
-1.  Create a note: `/n Project Ideas`
-2.  Write content in Markdown and save (`Ctrl+Enter`).
-3.  List notes to find ID: `/a`
-4.  View note: `/v 1`
+### 3.2 Navigation Commands
+Navigate between different views of the SPA.
+| Command | View | Description |
+| :--- | :--- | :--- |
+| `/terminal` | Terminal | Return to the primary terminal interface. |
+| `/notes` | Notes Explorer | Browse all notes with a graphical interface. |
+| `/commands` | Command Explorer | Visual reference for all available commands. |
+| `/history` | History View | View terminal command and AI interaction history. |
+| `/settings` | Settings | Configure theme, layout, and shortcuts. |
 
-## 4. Project Structure
+### 3.3 AI-Integrated Commands
+Requires a local Ollama instance running at `127.0.0.1:11434`.
+| Command | Description |
+| :--- | :--- |
+| `/ask <query>` | Ask a question based on your note context. |
+| `/chat <msg>` | Interactive chat with context from your notes. |
+| `/summarize <id>` | AI-generated summary of a specific note. |
+| `/rewrite <id>` | Refined version of a note for better clarity. |
+| `/explain <id>` | Simple "ELI5" explanation of note content. |
+| `/tags <id>` | Auto-generate suggested tags for a note. |
+| `/summaries <id>` | View all previously saved AI summaries for a note. |
+
+## 4. UI & Interaction Components
+
+### 4.1 Quick Actions
+A floating menu (bolt icon) provides rapid access to:
+- New Note, List All, Search, View Last, Delete, and Clear.
+
+### 4.2 Tag Picker
+A dedicated tag management panel allows toggling predefined tags (Urgent, Progress, Done, Reference, Idea, Personal) on the current or last viewed note.
+
+### 4.3 Startup Splash
+Optional ASCII art splash screen that displays on session load, showing the "MONOLITH_CMD" logo and session stats.
+
+## 5. Keyboard Shortcuts
+
+| Action | Shortcut (Mac) | Shortcut (Win/Linux) |
+| :--- | :--- | :--- |
+| **New Note** | `⌘ + N` | `Ctrl + N` |
+| **Search Notes** | `⌘ + F` | `Ctrl + F` |
+| **Save Note** | `⌘ + S` | `Ctrl + S` |
+| **Toggle Note List** | `⌘ + L` | `Ctrl + L` |
+| **Delete Note** | `⌘ + Backspace` | `Ctrl + Del` |
+| **Undo Delete** | `⌘ + Z` | `Ctrl + Z` |
+| **Command Palette** | `⌘ + P` | `Ctrl + P` |
+| **Zen Mode** | `⌘ + .` | `Ctrl + .` |
+| **Switch Theme** | `⌘ + Shift + T` | `Ctrl + Shift + T` |
+| **Focus Input** | `/` (while not typing) | `/` (while not typing) |
+
+## 6. Project Structure
 
 ```
 .
-├── index.html       # Main application entry point (UI structure)
-├── styles.css       # Visual styling (themes, terminal look & feel)
-├── main.js          # UI Logic (Event listeners, DOM manipulation)
-├── commands.js      # Command processing engine
-├── storage.js       # Data abstraction layer
-├── db.js            # Low-level IndexedDB wrapper
-├── package.json     # Dev dependencies and scripts
-└── .junie/          # Project documentation
-    └── guidelines.md
+├── index.html           # Main SPA entry point
+├── styles.css           # Global design system & layout
+├── main.js              # Core controller & event orchestration
+├── router.js            # SPA Routing logic
+├── commands.js          # Command parsing & execution engine
+├── storage.js           # High-level data management
+├── db.js                # IndexedDB persistence layer
+├── views/               # View-specific logic
+│   ├── notes-explorer.js
+│   ├── settings-view.js
+│   ├── history-view.js
+│   └── commands-explorer.js
+├── ai/                  # AI Provider integration
+│   ├── ai.js            # AI orchestration (Ollama)
+│   └── providers/       # Implementation details for LLMs
+└── .junie/              # Documentation
 ```
 
--   **`main.js`**: Handles the glue between the HTML UI and the logic. It manages overlays (Editor, Viewer) and intercepts specific commands that require UI interaction (like opening the editor).
--   **`commands.js`**: Parses user input, handles command chaining (`&&`), and executes non-UI commands (like `list` or `delete`).
--   **`db.js`**: Manages the IndexedDB connection, schema versioning, and raw CRUD operations.
+## 7. Configuration
 
-## 5. Themes & Styling
+User preferences are stored in `localStorage` and managed via the **Settings View**:
+- **Appearance:** Theme selection, Startup Art toggle, Font Size.
+- **Editor:** Line numbers toggle.
+- **AI:** Model selection and configuration.
+- **Shortcuts:** Customizable keyboard mapping.
 
-Terminal Notes supports multiple visual themes while keeping a terminal-first, developer-focused aesthetic.
+## 8. Development & Testing
 
--   **Theme mechanism:**
-    -   All colors and surfaces are defined via CSS variables in `styles.css`.
-    -   The `<html>` element exposes the active theme via a `data-theme` attribute.
-    -   The default theme is `dark` (no explicit `data-theme` or `data-theme="dark"`).
--   **Defined themes (initial set):**
-    -   `dark` (default)
-    -   `light`
-    -   `solarized-dark`
-    -   `dracula`
+- **Testing:** Uses Vitest for unit tests. Run `npm test`.
+- **Local Dev:** Use a simple static server (e.g., `npx serve .`).
+## 9. Extending the Application
 
-### 5.1 CSS Variable Structure
+### 9.1 Adding a New Theme
+1.  **CSS Variables:** Define variable overrides in `styles.css` using `html[data-theme="your-theme"]`.
+2.  **Registration:** Add the theme name to the `AVAILABLE_THEMES` constant in `SettingsView`.
+3.  **UI:** The settings view will automatically pick up the new theme for selection.
 
--   Base variables are declared in `:root` in `styles.css` (e.g. `--bg-body`, `--color-text`, `--accent-prompt`, `--surface-terminal`, etc.).
--   Each theme overrides some or all of these variables using attribute selectors:
-    -   `html[data-theme="light"] { ... }`
-    -   `html[data-theme="solarized-dark"] { ... }`
-    -   `html[data-theme="dracula"] { ... }`
--   Component styles **never** hardcode theme colors directly; they use the variables instead.
+### 9.2 Adding AI Providers
+The AI system is modular. To add a new provider:
+1.  Create a new file in `ai/providers/`.
+2.  Implement the required interface (ask, chat, summarize).
+3.  Register the provider in `ai/ai.js`.
 
-### 5.2 Theme Commands & UX
-
--   `/theme` — list all available themes and highlight the current one.
--   `/theme <name>` — switch to a specific theme, e.g. `/theme dracula`.
--   On success, the terminal prints a success message (e.g. `Theme switched to dracula.`).
--   Invalid theme names fail gracefully with a helpful error and a list of valid themes.
--   Theme changes are instant and do not reload the page.
-
-### 5.3 Persistence
-
--   The selected theme is stored in `localStorage` under the key `terminal-notes-theme`.
--   On load, `main.js` reads this value and applies it via `document.documentElement.dataset.theme`.
--   If no theme is stored, the app falls back to `dark`.
-
-### 5.4 Adding a New Theme
-
-To add a new theme:
-
-1.  **Define variable overrides in `styles.css`:**
-
-    -   Add a new block:
-        -   `html[data-theme="my-theme"] { ... }`
-    -   Override only what you need (backgrounds, text, accents, borders).
-2.  **Register the theme in `main.js`:**
-
-    -   Add the theme name to the `AVAILABLE_THEMES` array.
-3.  **Test with the command:**
-
-    -   Use `/theme my-theme` in the terminal.
-4.  **Design guidelines:**
-    -   Prioritise readability and calm, professional palettes.
-    -   Avoid extreme neon contrast; aim for something you’d be comfortable in VS Code/iTerm/Obsidian.
-
-## 5. Configuration & Tooling
-
-The project uses a minimal Node.js setup primarily for testing.
-
--   **`package.json`**:
-    -   **Scripts**:
-        -   `test`: Runs the test suite (`vitest run`).
-    -   **Dependencies**:
-        -   `vitest`: Unit testing framework.
-
--   **Testing Setup**:
-    -   The project is configured to use **Vitest**.
-    -   Tests can be run via `npm test` or `npx vitest run`.
-    -   *Note: Runtime application does not require Node.js.*
-
-## 6. Convex & App Structure
-
-*This project does not use Convex or any external backend services. It is a strictly client-side application.*
-
-## 7. Testing Setup
-
-To run tests:
-1.  Install dependencies: `npm install`
-2.  Run tests: `npm test`
-
-A sample test configuration has been verified to ensure the environment is correctly set up for future unit testing of logic files (e.g., `commands.js` or `storage.js`).
+---
+*Last Updated: 2026-04-13*

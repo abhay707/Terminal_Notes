@@ -1,101 +1,512 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal Notes</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MONOLITH_CMD — Terminal Notes</title>
+  <meta name="description" content="MONOLITH_CMD — A terminal-first note-taking system for developers. Create, manage, and query notes with command-line precision.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Material Symbols -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="app">
-        <div class="terminal-window">
-            <div class="window-header">
-                <div class="window-controls">
-                    <span class="control red"></span>
-                    <span class="control yellow"></span>
-                    <span class="control green"></span>
-                </div>
-                <div class="window-title">Terminal Notes — local session</div>
-            </div>
 
-            <div class="window-body">
-                <div id="terminal-container">
-                    <div id="output" class="terminal-output"></div>
-                </div>
+  <!-- =====================================
+       PERSISTENT NAV BAR
+       ===================================== -->
+  <header class="nav-bar" id="nav-bar">
+    <div class="nav-bar-inner">
+      <div class="nav-left">
+        <span class="nav-logo" id="nav-logo">MONOLITH_CMD</span>
+        <div class="nav-divider"></div>
+        <span class="nav-context" id="nav-context">TERMINAL</span>
+      </div>
+      <nav class="nav-links" id="nav-links">
+        <button class="nav-link active" data-view="history">History</button>
+        <button class="nav-link" data-view="commands">Commands</button>
+        <button class="nav-link" data-view="notes">Notes</button>
+      </nav>
+      <div class="nav-icons">
+        <button class="nav-icon-btn" id="btn-terminal" title="Terminal">
+          <span class="material-symbols-outlined">terminal</span>
+        </button>
+        <button class="nav-icon-btn" id="btn-settings" data-view="settings" title="Settings">
+          <span class="material-symbols-outlined">settings</span>
+        </button>
+      </div>
+    </div>
+    <div class="nav-separator"></div>
 
-                <div id="command-palette">
-                    <div class="input-line">
-                        <span class="prompt">$</span>
-                        <input
-                            type="text"
-                            id="command-input"
-                            class="palette-input"
-                            placeholder="Type a command… (try /help)"
-                            autofocus
-                            autocomplete="off"
-                            spellcheck="false"
-                        >
-                    </div>
-                    <div id="suggestions" class="suggestions">
-                        <div class="chip" data-cmd="/n"><span class="chip-key">/n</span><span class="chip-label">create new note</span></div>
-                        <div class="chip" data-cmd="/a"><span class="chip-key">/a</span><span class="chip-label">view all notes</span></div>
-                        <div class="chip" data-cmd="/search"><span class="chip-key">/search</span><span class="chip-label">search notes</span></div>
-                        <div class="chip" data-cmd="/help"><span class="chip-key">/help</span><span class="chip-label">list all commands</span></div>
-                    </div>
-                </div>
-            </div>
+    <!-- Editor Nav Actions (shown only in editor view) -->
+    <div class="nav-bar-inner hidden" id="nav-editor-actions">
+      <div class="nav-left">
+        <span class="nav-logo" id="nav-logo-editor">MONOLITH</span>
+        <div class="nav-divider"></div>
+        <span class="nav-context" id="nav-context-editor">NEW_NOTE</span>
+      </div>
+      <div class="nav-icons">
+        <button class="nav-btn-ghost" id="btn-editor-cancel">Cancel</button>
+        <button class="nav-btn-save" id="btn-editor-save">Save</button>
+      </div>
+    </div>
+  </header>
 
-            <div id="app-footer">
-                <div class="footer-content">
-                    <span>Terminal Notes</span>
-                    <span class="separator">•</span>
-                    <span>All data stored locally</span>
-                </div>
-            </div>
+  <!-- =====================================
+       MAIN APP CONTAINER
+       ===================================== -->
+  <div id="app">
+
+    <!-- ====== TERMINAL VIEW (default) ====== -->
+    <div class="view active" id="view-terminal">
+      <div class="terminal-wrapper">
+        <div class="window-chrome" id="terminal-chrome">
+          <div class="window-dots">
+            <div class="window-dot dot-red"></div>
+            <div class="window-dot dot-yellow"></div>
+            <div class="window-dot dot-green"></div>
+          </div>
+          <span class="window-breadcrumb">
+            <span class="material-symbols-outlined">lock</span>
+            SESSION_01 BASE TERMINAL
+          </span>
         </div>
-
-        <div id="editor-overlay" class="overlay hidden">
-            <div class="panel editor-panel">
-                <input type="text" id="editor-title" placeholder="Note Title (Optional)" class="editor-title">
-                <textarea id="editor-textarea" placeholder="Write here..."></textarea>
-                <div class="hints">
-                    <span class="hint">markdown supported</span>
-                    <button id="editor-save" class="btn-action">Save (Ctrl+Enter)</button>
-                    <button id="editor-delete" class="btn-action" style="background-color: #da3633;">Delete</button>
-                    <button id="editor-cancel" class="btn-secondary">Cancel (Esc)</button>
-                </div>
+        <div class="terminal-body">
+          <div id="terminal-container">
+            <div id="output"></div>
+          </div>
+            <div class="terminal-input-bar">
+              <span class="prompt">&gt;</span>
+              <input type="text" class="terminal-input" id="commandInput"
+                     placeholder="Type a command or ask AI..."
+                     autocomplete="off" spellcheck="false" autofocus>
+              <div class="terminal-input-icons">
+                <span class="material-symbols-outlined" title="Tag Note" id="btn-tag-picker">sentiment_satisfied</span>
+                <span class="material-symbols-outlined" title="Quick Actions" id="btn-quick-actions">electric_bolt</span>
+              </div>
             </div>
-        </div>
 
-        <div id="viewer-overlay" class="overlay hidden">
-            <div class="panel viewer-panel">
-                <div id="viewer-header" class="viewer-header"></div>
-                <div id="viewer-content" class="viewer-content"></div>
-                <div class="hints">
-                    <button id="viewer-edit" class="btn-secondary">Edit (e)</button>
-                    <button id="viewer-delete" class="btn-action">Delete (ctrl+d)</button>
-                    <button id="viewer-close" class="btn-secondary">Close (Esc)</button>
-                </div>
+            <!-- Tag Picker Panel -->
+            <div class="tag-picker-panel hidden" id="tag-picker-panel">
+              <div class="tag-picker-header">
+                <span class="material-symbols-outlined">label</span>
+                <span>ASSIGN TAGS</span>
+              </div>
+              <div class="tag-chips-container">
+                <div class="tag-chip" data-tag="Urgent" data-color="red">🔴 Urgent</div>
+                <div class="tag-chip" data-tag="In progress" data-color="yellow">🟡 In progress</div>
+                <div class="tag-chip" data-tag="Done" data-color="green">🟢 Done</div>
+                <div class="tag-chip" data-tag="Reference" data-color="blue">🔵 Reference</div>
+                <div class="tag-chip" data-tag="Idea" data-color="white">⚪ Idea</div>
+                <div class="tag-chip" data-tag="Personal" data-color="purple">🟣 Personal</div>
+              </div>
             </div>
-        </div>
 
-        <div id="delete-modal" class="overlay hidden">
-            <div class="panel modal-panel">
-                <div class="modal-message">Are you sure you want to delete this note?</div>
-                <div class="modal-options">
-                    <button id="modal-yes" class="btn-action">Yes</button>
-                    <button id="modal-no" class="btn-secondary">No</button>
+            <!-- Quick Actions Panel -->
+            <div class="quick-actions-panel hidden" id="quick-actions-panel">
+              <div class="quick-actions-header">
+                <span class="material-symbols-outlined">bolt</span>
+                <span>QUICK ACTIONS</span>
+              </div>
+              <div class="quick-actions-grid">
+                <div class="quick-action-tile" data-action="new_note">
+                  <span class="material-symbols-outlined">note_add</span>
+                  <span class="tile-label">NEW NOTE</span>
                 </div>
-                <div class="modal-hint">Use Arrow Keys to Select</div>
+                <div class="quick-action-tile" data-action="list_notes">
+                  <span class="material-symbols-outlined">list</span>
+                  <span class="tile-label">LIST ALL</span>
+                </div>
+                <div class="quick-action-tile" data-action="search">
+                  <span class="material-symbols-outlined">search</span>
+                  <span class="tile-label">SEARCH</span>
+                </div>
+                <div class="quick-action-tile" data-action="view_last">
+                  <span class="material-symbols-outlined">visibility</span>
+                  <span class="tile-label">VIEW LAST</span>
+                </div>
+                <div class="quick-action-tile" data-action="delete">
+                  <span class="material-symbols-outlined">delete</span>
+                  <span class="tile-label">DELETE</span>
+                </div>
+                <div class="quick-action-tile" data-action="clear">
+                  <span class="material-symbols-outlined">block</span>
+                  <span class="tile-label">CLEAR</span>
+                </div>
+              </div>
             </div>
+
+          </div>
         </div>
     </div>
-    <script src="db.js"></script>
-    <script src="storage.js"></script>
-    <script src="commands.js"></script>
-    <script src="main.js"></script>
+
+    <!-- ====== NOTES EXPLORER VIEW ====== -->
+    <div class="view" id="view-notes">
+      <div class="notes-wrapper">
+        <div class="window-chrome">
+          <div class="window-dots">
+            <div class="window-dot dot-red"></div>
+            <div class="window-dot dot-yellow"></div>
+            <div class="window-dot dot-green"></div>
+          </div>
+          <span class="window-breadcrumb">
+            <span class="material-symbols-outlined">lock</span>
+            MONOLITH_01 BASE TERMINAL / EXPLORER
+          </span>
+        </div>
+        <div class="notes-search-bar">
+          <span class="material-symbols-outlined">search</span>
+          <input type="text" class="notes-search-input" id="notes-search"
+                 placeholder="QUERY NOTES..." autocomplete="off" spellcheck="false">
+          <div class="notes-search-actions">
+            <kbd>ESC</kbd>
+            <span id="notes-clear-search">CLEAR</span>
+          </div>
+        </div>
+        <div class="notes-breadcrumb">
+          <span class="notes-path">SYSTEM / LOCAL / NOTES</span>
+          <span class="notes-count" id="notes-count">0 OBJECTS FOUND</span>
+        </div>
+        <div class="notes-list" id="notes-list">
+          <!-- Note cards injected by JS -->
+        </div>
+        <div class="notes-action-prompt">
+          <span class="prompt">&gt;</span>
+          <input type="text" class="terminal-input" id="notes-action-input"
+                 placeholder="EXECUTE ACTION (NEW, SEARCH, DELETE)..."
+                 autocomplete="off" spellcheck="false">
+          <div class="terminal-input-icons">
+            <span class="material-symbols-outlined">sentiment_satisfied</span>
+            <span class="material-symbols-outlined">electric_bolt</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== EDITOR VIEW ====== -->
+    <div class="view" id="view-editor">
+      <div class="editor-wrapper">
+        <div class="window-chrome">
+          <div class="window-dots">
+            <div class="window-dot dot-red"></div>
+            <div class="window-dot dot-yellow"></div>
+            <div class="window-dot dot-green"></div>
+          </div>
+          <span class="window-breadcrumb" id="editor-breadcrumb">
+            root@monolith:~/notes/new_draft.md
+          </span>
+        </div>
+        <div class="editor-title-section">
+          <span class="editor-hash">#</span>
+          <input type="text" class="editor-title-input" id="editor-title"
+                 placeholder="New Note Title" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="editor-separator"></div>
+        <div class="editor-content">
+          <div class="editor-gutter" id="editor-gutter">
+            <span>01</span><span>02</span><span>03</span>
+            <span>04</span><span>05</span><span>06</span>
+          </div>
+          <textarea class="editor-textarea" id="editor-textarea"
+                    placeholder="Start writing your note here..."></textarea>
+        </div>
+        <div class="editor-status" id="editor-status">
+          <div class="editor-status-item">
+            <span class="material-symbols-outlined">markdown</span>
+            <span>Markdown enabled</span>
+          </div>
+          <div class="editor-status-item">
+            <span class="material-symbols-outlined">save</span>
+            <span>Autosave active</span>
+          </div>
+          <div class="editor-status-item" id="editor-word-count">
+            <span>0 words</span>
+          </div>
+        </div>
+        <div class="editor-command-hint">
+          <span class="prompt">$</span>
+          <div class="editor-command-hint-text">
+            Press <kbd>Cmd + S</kbd> to save or <kbd>/</kbd> for commands...
+          </div>
+          <div class="cursor-block cursor-blink" style="width:6px;height:16px;background:var(--secondary-fixed-dim)"></div>
+        </div>
+      </div>
+      <footer class="editor-metadata" id="editor-metadata">
+        <div class="editor-meta-group">
+          <div class="editor-meta-item">
+            <span class="editor-meta-label">CREATED</span>
+            <span class="editor-meta-value" id="editor-meta-created">—</span>
+          </div>
+          <div class="editor-meta-item">
+            <span class="editor-meta-label">LOCATION</span>
+            <span class="editor-meta-value" id="editor-meta-location">local_fs/vault/daily</span>
+          </div>
+        </div>
+        <div class="editor-meta-actions">
+          <span class="material-symbols-outlined" title="History">history</span>
+          <span class="material-symbols-outlined" title="Share">share</span>
+          <span class="material-symbols-outlined" title="Delete" id="editor-meta-delete">delete</span>
+        </div>
+      </footer>
+    </div>
+
+    <!-- ====== COMMANDS EXPLORER VIEW ====== -->
+    <div class="view" id="view-commands">
+      <div class="commands-wrapper">
+        <div class="window-chrome">
+          <div class="window-dots">
+            <div class="window-dot dot-red"></div>
+            <div class="window-dot dot-yellow"></div>
+            <div class="window-dot dot-green"></div>
+          </div>
+          <span class="window-breadcrumb">
+            ROOT / BIN / COMMANDS_EXPLORER
+          </span>
+        </div>
+        <div class="commands-filter">
+          <span class="material-symbols-outlined">search</span>
+          <input type="text" class="commands-filter-input" id="commands-search"
+                 placeholder="Filter commands (e.g. /ask)..." autocomplete="off" spellcheck="false">
+          <span class="commands-filter-shortcut">CMD+K</span>
+        </div>
+        <div class="commands-grid" id="commands-grid">
+          <!-- Command cards injected by JS -->
+        </div>
+        <div class="terminal-input-bar">
+          <span class="prompt">&gt;</span>
+          <input type="text" class="terminal-input" id="commands-action-input"
+                 placeholder="Type a command or navigate..."
+                 autocomplete="off" spellcheck="false">
+          <div class="terminal-input-icons">
+            <span class="material-symbols-outlined" title="Emoji">sentiment_satisfied</span>
+            <span class="material-symbols-outlined" title="Execute">electric_bolt</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== HISTORY VIEW ====== -->
+    <div class="view" id="view-history">
+      <div class="history-wrapper">
+        <div class="window-chrome">
+          <div class="window-dots">
+            <div class="window-dot dot-red"></div>
+            <div class="window-dot dot-yellow"></div>
+            <div class="window-dot dot-green"></div>
+          </div>
+          <span class="window-breadcrumb">
+            <span class="material-symbols-outlined">lock</span>
+            SESSION_01 BASE TERMINAL
+          </span>
+        </div>
+        <div class="history-body" id="history-body">
+          <!-- History entries injected by JS -->
+        </div>
+        <div class="terminal-input-bar">
+          <span class="prompt">&gt;</span>
+          <input type="text" class="terminal-input" id="history-input"
+                 placeholder="Type a command or ask AI..."
+                 autocomplete="off" spellcheck="false">
+          <div class="terminal-input-icons">
+            <span class="material-symbols-outlined">sentiment_satisfied</span>
+            <span class="material-symbols-outlined">electric_bolt</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== SETTINGS VIEW ====== -->
+    <div class="view" id="view-settings">
+      <div class="settings-wrapper">
+        <div class="window-chrome">
+          <div class="window-dots">
+            <div class="window-dot dot-red"></div>
+            <div class="window-dot dot-yellow"></div>
+            <div class="window-dot dot-green"></div>
+          </div>
+          <span class="window-breadcrumb">
+            <span class="material-symbols-outlined">lock</span>
+            SESSION_01 BASE SETTINGS
+          </span>
+          <span style="position:absolute;right:16px;font-family:var(--font-mono);font-size:0.625rem;color:var(--on-surface-variant);opacity:0.3">v1.0</span>
+        </div>
+        <div class="settings-body" id="settings-body">
+
+          <!-- Appearance Section -->
+          <div class="settings-section">
+            <h2 class="settings-section-title">Appearance</h2>
+            <p class="settings-section-desc">Adjust visual parameters of the monolith.</p>
+
+            <div style="display:flex;gap:24px;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap">
+              <!-- Theme Selection -->
+              <div>
+                <div class="settings-control-desc" style="margin-bottom:8px">THEME SELECTION</div>
+                <div class="settings-themes" id="settings-themes">
+                  <div class="theme-card active" data-theme="monolith">
+                    <div class="theme-card-preview" style="background:linear-gradient(135deg, #101419 0%, #1c2025 100%)"></div>
+                    <div class="theme-card-label">GHOST SYNTAX</div>
+                  </div>
+                  <div class="theme-card" data-theme="high-contrast">
+                    <div class="theme-card-preview" style="background:linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)"></div>
+                    <div class="theme-card-label">HIGH CONTRAST</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Font Size -->
+              <div style="flex:1;min-width:200px">
+                <div class="settings-control-desc" style="margin-bottom:8px">FONT SIZE</div>
+                <div class="settings-slider">
+                  <div class="settings-slider-track" id="font-slider-track">
+                    <div class="settings-slider-fill" id="font-slider-fill" style="width:50%"></div>
+                    <div class="settings-slider-thumb" id="font-slider-thumb" style="left:calc(50% - 7px)"></div>
+                  </div>
+                  <span class="settings-slider-value" id="font-size-value">14px</span>
+                </div>
+              </div>
+
+              <!-- Show Line Numbers Toggle -->
+              <div>
+                <div class="settings-control">
+                  <div class="settings-control-info">
+                    <div class="settings-control-label">Show line numbers</div>
+                    <div class="settings-control-desc">RENDER INDEX COLUMN IN EDITOR</div>
+                  </div>
+                  <div class="toggle-switch active" id="toggle-line-numbers"></div>
+                </div>
+              </div>
+
+              <!-- Show Startup Art Toggle -->
+              <div>
+                <div class="settings-control">
+                  <div class="settings-control-info">
+                    <div class="settings-control-label">Show startup art</div>
+                    <div class="settings-control-desc">DISPLAY ASCII SPLASH ON BOOT</div>
+                  </div>
+                  <div class="toggle-switch active" id="toggle-startup-art"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Keyboard Shortcuts Section -->
+          <div class="settings-section">
+            <h2 class="settings-section-title">Keyboard Shortcuts</h2>
+            <p class="settings-section-desc">Haptic efficiency mapping.</p>
+
+            <div class="shortcuts-table">
+              <div class="shortcuts-table-header">
+                <span>ACTION</span>
+                <span>COMMAND STRING</span>
+                <span>EDIT</span>
+              </div>
+              <div class="shortcuts-row" data-shortcut-id="new_note">
+                <span class="shortcut-action">New note</span>
+                <span><span class="shortcut-keys">⌘ + N</span></span>
+                <span class="shortcut-edit"><span class="material-symbols-outlined">edit</span></span>
+              </div>
+              <div class="shortcuts-row" data-shortcut-id="search_notes">
+                <span class="shortcut-action">Search notes</span>
+                <span><span class="shortcut-keys">⌘ + F</span></span>
+                <span class="shortcut-edit"><span class="material-symbols-outlined">edit</span></span>
+              </div>
+              <div class="shortcuts-row" data-shortcut-id="save_note">
+                <span class="shortcut-action">Save note</span>
+                <span><span class="shortcut-keys">⌘ + S</span></span>
+                <span class="shortcut-edit"><span class="material-symbols-outlined">edit</span></span>
+              </div>
+              <div class="shortcuts-row" data-shortcut-id="toggle_note_list">
+                <span class="shortcut-action">Toggle note list</span>
+                <span><span class="shortcut-keys">⌘ + B</span></span>
+                <span class="shortcut-edit"><span class="material-symbols-outlined">edit</span></span>
+              </div>
+              <div class="shortcuts-row" data-shortcut-id="delete_note">
+                <span class="shortcut-action">Delete note</span>
+                <span><span class="shortcut-keys">⌘ + Delete</span></span>
+                <span class="shortcut-edit"><span class="material-symbols-outlined">edit</span></span>
+              </div>
+              <div class="shortcuts-row" data-shortcut-id="undo_delete">
+                <span class="shortcut-action">Undo delete</span>
+                <span><span class="shortcut-keys">⌘ + Z</span></span>
+                <span class="shortcut-edit"><span class="material-symbols-outlined">edit</span></span>
+              </div>
+              <div class="shortcuts-row" data-shortcut-id="open_command_palette">
+                <span class="shortcut-action">Open command palette</span>
+                <span><span class="shortcut-keys">⌘ + K</span></span>
+                <span class="shortcut-edit"><span class="material-symbols-outlined">edit</span></span>
+              </div>
+              <div class="shortcuts-row" data-shortcut-id="view_note">
+                <span class="shortcut-action">View note</span>
+                <span><span class="shortcut-keys">⌘ + Enter</span></span>
+                <span class="shortcut-edit"><span class="material-symbols-outlined">edit</span></span>
+              </div>
+              <div class="shortcuts-row" data-shortcut-id="switch_theme">
+                <span class="shortcut-action">Switch theme</span>
+                <span><span class="shortcut-keys">⌘ + Shift + T</span></span>
+                <span class="shortcut-edit"><span class="material-symbols-outlined">edit</span></span>
+              </div>
+              <div class="shortcuts-row" data-shortcut-id="toggle_zen_mode">
+                <span class="shortcut-action">Toggle zen mode</span>
+                <span><span class="shortcut-keys">F11</span></span>
+                <span class="shortcut-edit"><span class="material-symbols-outlined">edit</span></span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Settings Footer -->
+        <div class="settings-footer">
+          <div class="settings-footer-left">
+            <span class="material-symbols-outlined">info</span>
+            <span>MONOLITH_CMD v1.0 · BUILT_ACTIVE</span>
+          </div>
+          <div class="settings-footer-right">
+            <button class="btn-primary" id="btn-settings-terminal" style="font-size:0.625rem;padding:4px 12px">GO TO TERMINAL</button>
+            <span class="material-symbols-outlined" title="Info">info</span>
+            <span class="material-symbols-outlined" title="Help">help</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =====================================
+       DELETE CONFIRMATION MODAL
+       ===================================== -->
+  <div class="overlay hidden" id="delete-overlay">
+    <div class="modal-panel">
+      <p class="modal-message" id="delete-message">Are you sure you want to delete this note? This action cannot be undone.</p>
+      <div class="modal-options" id="delete-options">
+        <button class="btn-secondary selected" id="btn-delete-no">No</button>
+        <button class="btn-danger" id="btn-delete-yes">Yes</button>
+      </div>
+      <p class="modal-hint">Use ← → to select, Enter to confirm</p>
+    </div>
+  </div>
+
+  <!-- =====================================
+       SCRIPTS
+       ===================================== -->
+  <script src="router.js"></script>
+  <script src="db.js"></script>
+  <script src="storage.js"></script>
+  <script src="ai/config/aiConfig.js"></script>
+  <script src="ai/providers/ollamaProvider.js"></script>
+  <script src="ai/ai.js"></script>
+  <script src="views/notes-explorer.js"></script>
+  <script src="views/commands-explorer.js"></script>
+  <script src="views/history-view.js"></script>
+  <script src="views/settings-view.js"></script>
+  <script src="commands.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
